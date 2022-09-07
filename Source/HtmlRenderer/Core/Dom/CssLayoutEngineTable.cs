@@ -624,6 +624,13 @@ namespace TheArtOfDev.HtmlRenderer.Core.Dom
                 _tableBox.Location = new RPoint(startx - _tableBox.ActualBorderLeftWidth - _tableBox.ActualPaddingLeft - GetHorizontalSpacing(), _tableBox.Location.Y);
             }
 
+            if (_caption != null)
+            {
+                _caption.Size = new RSize(GetAvailableTableWidth(), 0f);
+                _caption.PerformLayout(g);
+                cury += _caption.Size.Height;
+            }
+
             for (int i = 0; i < _allRows.Count; i++)
             {
                 var row = _allRows[i];

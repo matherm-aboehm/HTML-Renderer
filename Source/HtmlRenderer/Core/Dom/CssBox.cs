@@ -225,6 +225,7 @@ namespace TheArtOfDev.HtmlRenderer.Core.Dom
                        box.Display != CssConstants.ListItem &&
                        box.Display != CssConstants.Table &&
                        box.Display != CssConstants.TableCell &&
+                       box.Display != CssConstants.TableCaption &&
                        box.ParentBox != null)
                 {
                     box = box.ParentBox;
@@ -618,10 +619,10 @@ namespace TheArtOfDev.HtmlRenderer.Core.Dom
                 MeasureWordsSize(g);
             }
 
-            if (IsBlock || Display == CssConstants.ListItem || Display == CssConstants.Table || Display == CssConstants.InlineTable || Display == CssConstants.TableCell)
+            if (IsBlock || Display == CssConstants.ListItem || Display == CssConstants.Table || Display == CssConstants.InlineTable || Display == CssConstants.TableCell || Display == CssConstants.TableCaption)
             {
                 // Because their width and height are set by CssTable
-                if (Display != CssConstants.TableCell && Display != CssConstants.Table)
+                if (Display != CssConstants.TableCell && Display != CssConstants.Table && Display != CssConstants.TableCaption)
                 {
                     double width = ContainingBlock.Size.Width
                                    - ContainingBlock.ActualPaddingLeft - ContainingBlock.ActualPaddingRight
