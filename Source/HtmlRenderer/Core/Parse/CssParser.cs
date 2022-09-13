@@ -298,6 +298,23 @@ namespace TheArtOfDev.HtmlRenderer.Core.Parse
             }
         }
 
+        private bool IsPseudoClassSupported(string pseudoClass)
+        {
+            var bracketIdx = pseudoClass.IndexOf("(", StringComparison.Ordinal);
+            if (bracketIdx > -1)
+                pseudoClass = pseudoClass.Substring(0, bracketIdx);
+            switch (pseudoClass)
+            {
+                case "link":
+                case "hover":
+                case "first-child":
+                case "nth-child":
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
         /// <summary>
         /// Parse single CSS block source into CSS block instance.
         /// </summary>
@@ -307,22 +324,22 @@ namespace TheArtOfDev.HtmlRenderer.Core.Parse
         private CssBlock ParseCssBlockImp(string className, string blockSource)
         {
             className = className.ToLower();
-            string psedoClass = null;
+            string pseudoClass = null;
             var colonIdx = className.IndexOf(":", StringComparison.Ordinal);
             if (colonIdx > -1 && !className.StartsWith("::"))
             {
-                psedoClass = colonIdx < className.Length - 1 ? className.Substring(colonIdx + 1).Trim() : null;
+                pseudoClass = colonIdx < className.Length - 1 ? className.Substring(colonIdx + 1).Trim() : null;
                 className = className.Substring(0, colonIdx).Trim();
             }
 
-            if (!string.IsNullOrEmpty(className) && (psedoClass == null || psedoClass == "link" || psedoClass == "hover"))
+            if (!string.IsNullOrEmpty(className) && (pseudoClass == null || IsPseudoClassSupported(pseudoClass)))
             {
                 string firstClass;
                 var selectors = ParseCssBlockSelector(className, out firstClass);
 
                 var properties = ParseCssBlockProperties(blockSource);
 
-                return new CssBlock(firstClass, properties, selectors, psedoClass == "hover");
+                return new CssBlock(firstClass, properties, selectors, pseudoClass);
             }
 
             return null;

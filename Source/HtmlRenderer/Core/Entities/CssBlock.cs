@@ -10,7 +10,9 @@
 // - Sun Tsu,
 // "The Art of War"
 
+using System;
 using System.Collections.Generic;
+using System.Text;
 using TheArtOfDev.HtmlRenderer.Core.Utils;
 
 namespace TheArtOfDev.HtmlRenderer.Core.Entities
@@ -43,9 +45,19 @@ namespace TheArtOfDev.HtmlRenderer.Core.Entities
         private readonly List<CssBlockSelectorItem> _selectors;
 
         /// <summary>
+        /// full text of any pseudo-class (div p:pseudo-class(param))
+        /// </summary>
+        private readonly string _pseudoClass;
+
+        /// <summary>
         /// is the css block has :hover pseudo-class
         /// </summary>
         private readonly bool _hover;
+
+        /// <summary>
+        /// 1-based index when css block has :first-child or :nth-child pseudo-class
+        /// </summary>
+        private readonly int _nthChild;
 
         #endregion
 
@@ -57,7 +69,7 @@ namespace TheArtOfDev.HtmlRenderer.Core.Entities
         /// <param name="properties">the CSS block properties and values</param>
         /// <param name="selectors">optional: additional selectors to used in hierarchy</param>
         /// <param name="hover">optional: is the css block has :hover pseudo-class</param>
-        public CssBlock(string @class, Dictionary<string, string> properties, List<CssBlockSelectorItem> selectors = null, bool hover = false)
+        public CssBlock(string @class, Dictionary<string, string> properties, List<CssBlockSelectorItem> selectors = null, string pseudoClass = null)
         {
             ArgChecker.AssertArgNotNullOrEmpty(@class, "@class");
             ArgChecker.AssertArgNotNull(properties, "properties");
@@ -65,7 +77,18 @@ namespace TheArtOfDev.HtmlRenderer.Core.Entities
             _class = @class;
             _selectors = selectors;
             _properties = properties;
-            _hover = hover;
+            _pseudoClass = pseudoClass;
+            if (pseudoClass == "hover")
+                _hover = true;
+            else if (pseudoClass == "first-child")
+                _nthChild = 1;
+            else if (pseudoClass != null && pseudoClass.StartsWith("nth-child"))
+            {
+                int bracketIdx = pseudoClass.IndexOf("(", StringComparison.Ordinal);
+                _nthChild = bracketIdx > -1 && pseudoClass.EndsWith(")") ?
+                    int.Parse(pseudoClass.Substring(bracketIdx + 1, pseudoClass.Length - bracketIdx - 2)) :
+                    -1;
+            }
         }
 
         /// <summary>
@@ -93,11 +116,27 @@ namespace TheArtOfDev.HtmlRenderer.Core.Entities
         }
 
         /// <summary>
+        /// Gets the full text of any pseudo-class (div p:pseudo-class(param))
+        /// </summary>
+        public string PseudoClass
+        {
+            get { return _pseudoClass; }
+        }
+
+        /// <summary>
         /// is the css block has :hover pseudo-class
         /// </summary>
         public bool Hover
         {
             get { return _hover; }
+        }
+
+        /// <summary>
+        /// 1-based index when css block has :first-child or :nth-child pseudo-class
+        /// </summary>
+        public int NthChild
+        {
+            get { return _nthChild; }
         }
 
         /// <summary>
@@ -121,7 +160,7 @@ namespace TheArtOfDev.HtmlRenderer.Core.Entities
         /// <returns>new CssBlock with same data</returns>
         public CssBlock Clone()
         {
-            return new CssBlock(_class, new Dictionary<string, string>(_properties), _selectors != null ? new List<CssBlockSelectorItem>(_selectors) : null);
+            return new CssBlock(_class, new Dictionary<string, string>(_properties), _selectors != null ? new List<CssBlockSelectorItem>(_selectors) : null, _pseudoClass);
         }
 
         /// <summary>
@@ -167,7 +206,7 @@ namespace TheArtOfDev.HtmlRenderer.Core.Entities
             if (ReferenceEquals(this, other))
                 return true;
 
-            if (other.Hover != Hover)
+            if (!Equals(other._pseudoClass, _pseudoClass))
                 return false;
             if (other._selectors == null && _selectors != null)
                 return false;
@@ -224,12 +263,24 @@ namespace TheArtOfDev.HtmlRenderer.Core.Entities
         /// </summary>
         public override string ToString()
         {
-            var str = _class + " { ";
+            var str = new StringBuilder();
+            if (_selectors != null)
+            {
+                for (int i = _selectors.Count - 1; i >= 0; i--)
+                {
+                    str.Append(_selectors[i]).Append(" ");
+                }
+            }
+            str.Append(_class);
+            if (_pseudoClass != null)
+                str.Append(":").Append(_pseudoClass);
+            str.Append(" { ");
             foreach (var property in _properties)
             {
-                str += string.Format("{0}={1}; ", property.Key, property.Value);
+                str.AppendFormat("{0}={1}; ", property.Key, property.Value);
             }
-            return str + " }";
+            str.Append(" }");
+            return str.ToString();
         }
     }
 }

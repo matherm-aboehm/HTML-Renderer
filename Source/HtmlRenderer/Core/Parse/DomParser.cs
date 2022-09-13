@@ -296,6 +296,13 @@ namespace TheArtOfDev.HtmlRenderer.Core.Parse
         /// <returns>true - the block is assignable to the box, false - otherwise</returns>
         private static bool IsBlockAssignableToBoxWithSelector(CssBox box, CssBlock block)
         {
+            if (block.NthChild > 0)
+            {
+                var parentBox = box.ParentBox;
+                if (parentBox == null || block.NthChild > parentBox.Boxes.Count || parentBox.Boxes[block.NthChild - 1] != box)
+                    return false;
+            }
+
             foreach (var selector in block.Selectors)
             {
                 bool matched = false;
